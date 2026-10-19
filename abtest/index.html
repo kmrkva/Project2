@@ -86,15 +86,17 @@ code,.mono{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:13px;ba
 .cols-table{width:100%;border-collapse:collapse;font-size:14px;margin:8px 0}
 .cols-table td{border-bottom:1px solid var(--line);padding:6px 4px;color:var(--muted);vertical-align:top}
 .cols-table td:first-child{white-space:nowrap;padding-right:12px}
+.mini{display:inline-flex;gap:8px;align-items:center;font-size:14px;color:var(--muted);margin:6px 0 0;cursor:pointer}
+.mini input{accent-color:var(--accent);margin:0}
 .mobile-jump{display:inline-block;margin-top:6px;font-size:14px}
 @media (min-width:1020px){.mobile-jump{display:none}}
 </style>
 </head>
 <body>
 <header>
-  <h1>Set up your A/B test</h1>
-  <p>Your test is <b>one choice</b> between your client's product and the competitor. Half of participants will see your <b>original</b> product image (Version A) and half will see your <b>redesign</b> (Version B). Everything else stays the same, so any difference in choices comes from your redesign.</p>
-  <p>Everyone's choices from class are combined into one study and shown in a random order. Fill in each step below, check the live preview, then download your file and submit it on Canvas.</p>
+  <h1>Designing Your A/B Test Survey</h1>
+  <p>Your test will typically be <b>one choice</b> between your client's product and the competitor. Half of participants will see your <b>original</b> product image (control/Version A) and half will see your <b>redesign</b> (Version B). Everything else stays the same including the competitor product, so if people are more likely to choose your product in Version B than in Version A, it must have been caused by your redesign.</p>
+  <p>Everyone's choices from class will eventually be combined into one study and shown to participants in a random order. The participants will be some combination of US adults from an online survey panel (Prolific) and people who you send the survey to (e.g., friends, family). Fill in each step below, check the live preview, then download your file. Test it a few times to confirm that you get both versions and that it looks good. When you're happy with it, submit it on Canvas.</p>
   <a class="mobile-jump" href="#preview">Jump to the preview ↓</a>
 </header>
 
@@ -108,13 +110,15 @@ code,.mono{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:13px;ba
     <div><label class="f" for="ln">Last name</label><input type="text" id="ln"></div>
   </div>
   <p style="margin:14px 0 0"><b>Your study ID:</b> <span class="mono" id="sid" style="font-size:15px;font-weight:700">–</span></p>
-  <p class="help" style="margin-top:12px">In the final data you'll find your results in these four columns:</p>
+  <p class="help" style="margin-top:12px">In the final data you'll find your results in these columns:</p>
   <table class="cols-table">
     <tr><td><code id="c_v">id_v</code></td><td>Which version this person saw: <b>A</b> = original, <b>B</b> = redesign</td></tr>
     <tr><td><code id="c_c">id_c</code></td><td>Their choice: <b>1</b> = your client's product, <b>0</b> = competitor</td></tr>
     <tr><td><code id="c_t">id_t</code></td><td>Decision time in seconds</td></tr>
-    <tr><td><code id="c_x">id_x</code></td><td>Side your product was on (L/R) . hovers on yours . hovers on the competitor . other clicks (on phones, taps count as hovers)</td></tr>
+    <tr id="row_r" class="hidden"><td><code id="c_r">id_r</code></td><td>Answer to your follow-up question (step 9a): <b>1</b> = yes, <b>0</b> = no</td></tr>
+    <tr id="row_x" class="hidden"><td><code id="c_x">id_x</code></td><td>Side your product was on (L/R) . hovers on yours . hovers on the competitor . other clicks (on phones, taps count as hovers)</td></tr>
   </table>
+  <label class="mini"><input type="checkbox" id="track">Also record hovers and clicks (optional; adds an <code id="c_x2">id_x</code> column)</label>
 </section>
 
 <section class="step">
@@ -193,25 +197,28 @@ code,.mono{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:13px;ba
     <label class="opt"><input type="checkbox" name="demo" value="student"><span class="t">Student or non-student</span></label>
     <label class="opt"><input type="checkbox" name="demo" value="income"><span class="t">Household income</span></label>
     <label class="opt"><input type="checkbox" name="demo" value="education"><span class="t">Education</span></label>
-    <label class="opt"><input type="checkbox" name="demo" value="parent"><span class="t">Parent or not</span></label>
   </div>
   <label class="f" for="demoOther">Other (optional)</label>
   <input type="text" id="demoOther" placeholder="e.g., Owns a pet">
 </section>
 
 <section class="step">
-  <h2>9. Why, and for whom?</h2>
-  <p class="help">Not added to your choice. If you can measure something with <b>one simple question</b>, write it in; we might add it to the start or end of the study.</p>
-  <h3 class="subq">9a. Why will your redesign influence choices?</h3>
+  <h2>9. Follow-up questions</h2>
+  <h3 class="subq">9a. Does it work for likely buyers?</h3>
+  <p class="help">Optional question shown right below the two products. Answers go in your <code id="c_r2">id_r</code> column, so you can check whether your redesign works among people who would actually buy this kind of product.</p>
+  <label class="opt"><input type="checkbox" id="fuOn"><span><span class="t">Add this question below my choice</span></span></label>
+  <div class="sub hidden" id="fuWrap"><label class="f" for="fuText">Question wording (answered Yes or No)</label><input type="text" id="fuText" value="Would you buy a product like one of these in real life?"></div>
+  <p class="help" style="margin-top:18px">9b and 9c are <b>not added to your choice</b>. If you can measure something with <b>one simple question</b>, write it in; we might add it to the start or end of the study.</p>
+  <h3 class="subq">9b. Why will your redesign influence choices?</h3>
   <label class="f" for="whyEffect">Your explanation</label>
   <textarea id="whyEffect" placeholder="e.g., The new image makes the product seem more high-end."></textarea>
   <label class="f" for="whyQ">One simple question to measure this (optional)</label>
-  <input type="text" id="whyQ" placeholder="e.g., How high-quality does this product seem? (1 = Very low, 7 = Very high)">
-  <h3 class="subq">9b. Who might be most affected?</h3>
+  <input type="text" id="whyQ" placeholder="e.g., How high-quality does this product seem? (1-7 scale; 1 = Very low, 7 = Very high)">
+  <h3 class="subq">9c. Who might be most affected?</h3>
   <label class="f" for="modWhy">Who, and why?</label>
-  <textarea id="modWhy" placeholder="e.g., People already familiar with the brand, or people who buy this product often."></textarea>
+  <textarea id="modWhy" placeholder="e.g., People who are familiar or unfamiliar with these products."></textarea>
   <label class="f" for="modQ">One simple question to measure this (optional)</label>
-  <input type="text" id="modQ" placeholder="e.g., How familiar are you with the Kirkland brand? (Not at all … Very)">
+  <input type="text" id="modQ" placeholder="e.g., How familiar are you with the Kirkland brand?">
 </section>
 
 <section class="step" id="finish">
@@ -353,7 +360,9 @@ function readStudy(){
     comp: {brand: val("compBrand"), img: IMG.comp && shown(IMG.comp).url},
     client: {brandA: val("clientBrand"), brandB: $("brandChange").checked ? val("clientBrandB") : val("clientBrand"),
              imgA: IMG.a && shown(IMG.a).url, imgB: IMG.b && shown(IMG.b).url},
-    price, extras
+    price, extras,
+    track: $("track").checked,
+    followup: $("fuOn").checked ? {on:true, text: val("fuText") || LAB.FOLLOWUP_DEFAULT} : {on:false}
   };
 }
 
@@ -392,7 +401,8 @@ function checks(s){
 
 /* ---------- preview ---------- */
 let pv = {v:"A", clientLeft:true, flip:null};
-function drawPreview(s){ $("stage").innerHTML = LAB.trialHTML(s, pv.v, pv.clientLeft); $("stage").querySelectorAll(".buy").forEach(b=>b.addEventListener("click",()=>{ b.closest(".card").classList.toggle("chosen"); })); }
+function drawPreview(s){ $("stage").innerHTML = LAB.trialHTML(s, pv.v, pv.clientLeft); $("stage").querySelectorAll(".buy").forEach(b=>b.addEventListener("click",()=>{ b.closest(".card").classList.toggle("chosen"); }));
+  $("stage").querySelectorAll(".fbtn").forEach(f=>f.addEventListener("click",()=>{ $("stage").querySelectorAll(".fbtn").forEach(x=>x.classList.toggle("on", x===f)); })); }
 function setV(v){ pv.v = v; $("pvA").classList.toggle("on", v==="A"); $("pvB").classList.toggle("on", v==="B"); update(); }
 $("pvA").onclick = ()=>{ stopFlip(); setV("A"); };
 $("pvB").onclick = ()=>{ stopFlip(); setV("B"); };
@@ -408,6 +418,9 @@ function toggles(){
   $("customWrap").classList.toggle("hidden", !ov);
   if(!ov && radio("pm")==="custom") document.querySelector('input[name=pm][value=none]').checked = true;
   $("pBWrap").classList.toggle("hidden", !$("pBdiff").checked);
+  $("fuWrap").classList.toggle("hidden", !$("fuOn").checked);
+  $("row_r").classList.toggle("hidden", !$("fuOn").checked);
+  $("row_x").classList.toggle("hidden", !$("track").checked);
   $("extrasWrap").classList.toggle("hidden", !$("exOverride").checked);
   EXTRAS.forEach(e=>{
     $("exv_"+e.k).classList.toggle("hidden", !$("ex_"+e.k).checked);
@@ -422,7 +435,7 @@ function update(){
   if(lastTrim !== useTrim()){ lastTrim = useTrim(); slots.forEach(([k])=>{ if(IMG[k]) drawUpload(k); }); }
   const s = readStudy(), id = s.id || "id";
   $("sid").textContent = s.id || "–";
-  ["v","c","t","x"].forEach(k=>$("c_"+k).textContent = `${id}_${k}`);
+  ["v","c","t","x","r","x2","r2"].forEach(k=>$("c_"+k).textContent = `${id}_${k.slice(0,1)}`);
   $("zipname").textContent = `${id}_abtest.zip`;
   $("testlink").textContent = `kmrkva.github.io/Project2/lab/?only=${id}`;
   drawPreview(s);
@@ -468,7 +481,7 @@ $("dl").onclick = async ()=>{
       category:s.category, question:s.question, bg:s.bg,
       comp:{brand:s.comp.brand, img:"comp.jpg"},
       client:{brandA:s.client.brandA, brandB:s.client.brandB, imgA:"a.jpg", imgB:"b.jpg"},
-      price:s.price, extras:s.extras,
+      price:s.price, extras:s.extras, track:s.track, followup:s.followup,
       survey:{ demographics:[...document.querySelectorAll("input[name=demo]:checked")].map(x=>x.value),
                demographicsOther:val("demoOther"), whyEffect:val("whyEffect"), whyQuestion:val("whyQ"), whoAffected:val("modWhy"), whoQuestion:val("modQ") },
       imageInfo:Object.fromEntries(slots.map(([k])=>[k,{file:IMG[k].name, w:IMG[k].w, h:IMG[k].h, trimmed:!!(useTrim() && IMG[k].trimmed)}]))
