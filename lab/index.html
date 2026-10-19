@@ -127,7 +127,7 @@ function renderWelcome(){
 
 /* ---------- one choice ---------- */
 let tracker = null;
-document.addEventListener("click", e=>{ if(tracker && !e.target.closest(".buy")) tracker.clicks++; }, true);
+document.addEventListener("click", e=>{ if(tracker && !e.target.closest(".buy,.fbtn,.next")) tracker.clicks++; }, true);
 
 function preload(id){ const s = byId(id); if(!s) return; const L = LAB.listings(s, S.ver[id]); [L.client.img, L.comp.img].forEach(src=>{ if(src){ const i=new Image(); i.src=src; } }); }
 
@@ -141,15 +141,31 @@ function renderTrial(){
     card.addEventListener("pointerenter", e=>{ if(e.pointerType!=="touch") t.hov[who]++; });
     card.addEventListener("pointerdown", e=>{ if(e.pointerType==="touch" && !e.target.closest(".buy")) t.hov[who]++; });
   });
-  app.querySelectorAll(".buy").forEach(b=>b.addEventListener("click", ()=>{
+  const fu = LAB.hasFollowup(s), buys = [...app.querySelectorAll(".buy")];
+  const finish = ()=>{
     if(t.done) return; t.done = true;
-    const rt = performance.now() - t.start, who = b.dataset.who;
-    S.res[id] = { c: who==="client" ? 1 : 0, t: (rt/1000).toFixed(1), x: `${S.side[id]}.${t.hov.client}.${t.hov.comp}.${t.clicks}` };
-    tracker = null;
-    app.querySelectorAll(".buy").forEach(x=>x.disabled=true);
-    b.closest(".card").classList.add("chosen"); b.textContent = "Added ✓";
-    save(); setTimeout(next, 350);
+    const r = { c: t.choice==="client" ? 1 : 0, t: (t.rt/1000).toFixed(1) };
+    if(s.track) r.x = `${S.side[id]}.${t.hov.client}.${t.hov.comp}.${t.clicks}`;
+    if(fu) r.r = t.r;
+    S.res[id] = r; tracker = null;
+    app.querySelectorAll("button").forEach(x=>x.disabled=true);
+    save(); setTimeout(next, fu ? 150 : 350);
+  };
+  const nextBtn = app.querySelector(".next");
+  const ready = ()=>{ if(nextBtn) nextBtn.disabled = !(t.choice && t.r!=null); };
+  buys.forEach(b=>b.addEventListener("click", ()=>{
+    if(t.done) return;
+    t.choice = b.dataset.who; t.rt = performance.now() - t.start;   // last choice made counts
+    buys.forEach(x=>{ x.closest(".card").classList.toggle("chosen", x===b); x.textContent = x===b ? "Added ✓" : "Add to Cart"; });
+    if(fu) ready(); else finish();
   }));
+  if(fu){
+    app.querySelectorAll(".fbtn").forEach(f=>f.addEventListener("click", ()=>{
+      if(t.done) return; t.r = Number(f.dataset.r);
+      app.querySelectorAll(".fbtn").forEach(x=>x.classList.toggle("on", x===f)); ready();
+    }));
+    nextBtn.addEventListener("click", ()=>{ if(t.choice && t.r!=null) finish(); });
+  }
 }
 
 /* ---------- end: send everything to Qualtrics ---------- */
@@ -160,7 +176,9 @@ function params(){
   p.set("lab_dur", Math.round((Date.now()-S.t0)/1000)); p.set("lab_n", Object.keys(S.res).length);
   p.set("lab_ord", S.order.join("-"));
   S.order.forEach(id=>{ const r = S.res[id]; if(!r) return;
-    p.set(id+"_v", S.ver[id]); p.set(id+"_c", r.c); p.set(id+"_t", r.t); p.set(id+"_x", r.x); });
+    p.set(id+"_v", S.ver[id]); p.set(id+"_c", r.c); p.set(id+"_t", r.t);
+    if(r.x!=null) p.set(id+"_x", r.x);
+    if(r.r!=null) p.set(id+"_r", r.r); });
   return p;
 }
 function renderEnd(){
@@ -175,12 +193,12 @@ function renderEnd(){
     return;
   }
   const rows = S.order.map(id=>{ const r=S.res[id]||{};
-    return `<tr><td>${esc(id)}</td><td>${esc(S.ver[id])}</td><td>${r.c===1?"1 (client's product)":r.c===0?"0 (competitor)":""}</td><td>${esc(r.t||"")}</td><td>${esc(r.x||"")}</td></tr>`; }).join("");
+    return `<tr><td>${esc(id)}</td><td>${esc(S.ver[id])}</td><td>${r.c===1?"1 (client's product)":r.c===0?"0 (competitor)":""}</td><td>${esc(r.t||"")}</td><td>${r.r===1?"1 (yes)":r.r===0?"0 (no)":"–"}</td><td>${esc(r.x||"–")}</td></tr>`; }).join("");
   const again = v => { const u = new URL(location.href); u.searchParams.delete("seed"); u.searchParams.set("reset","1"); if(v) u.searchParams.set("v",v); else u.searchParams.delete("v"); return u.toString(); };
   app.innerHTML = `<div class="screen" style="max-width:820px">
     <h1>${ONLY?"Test complete":"End of choices"}</h1>
     <div class="note test">${ONLY?"<b>Test mode.</b> Nothing was saved. This is what would be recorded for this choice:":placeholder?"<b>Preview:</b> no Qualtrics link is set in config.js yet, so here's what would be sent.":"<b>Debug mode:</b> redirect paused."}</div>
-    <table class="res"><tr><th>ID</th><th>_v version</th><th>_c choice</th><th>_t seconds</th><th>_x side.hovers mine.hovers theirs.clicks</th></tr>${rows}</table>
+    <table class="res"><tr><th>ID</th><th>_v version</th><th>_c choice</th><th>_t seconds</th><th>_r follow-up</th><th>_x side.hovers mine.hovers theirs.clicks</th></tr>${rows}</table>
     ${ONLY?`<a class="btn" href="${esc(again("A"))}">Try Version A</a><a class="btn" href="${esc(again("B"))}">Try Version B</a><a class="btn ghost" href="${esc(again(""))}">Random version</a>`
       :`<p class="url">${esc(url)}</p><p style="font-size:13px">Link length: ${url.length} characters.</p><a class="btn ghost" href="${esc(again(""))}">Restart</a>`}
   </div>`;

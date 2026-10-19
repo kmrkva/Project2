@@ -64,8 +64,20 @@ function trialHTML(study, version, clientLeft){
     ${cat?`<div class="searchline">Results for "${esc(cat.toLowerCase())}"</div><h1 class="cat-title">${esc(cat)}</h1>`:""}
     <div class="qbanner"><span class="qt">${esc(study.question || "Which would you choose?")}</span></div>
     <div class="grid">${cardHTML(left,"L",bg)}${cardHTML(right,"R",bg)}</div>
+    ${followupHTML(study)}
+  </div>`;
+}
+/* Optional question shown under the two products, answered Yes (1) / No (0). */
+const FOLLOWUP_DEFAULT = "Would you buy a product like one of these in real life?";
+function hasFollowup(study){ return !!(study.followup && study.followup.on); }
+function followupHTML(study){
+  if(!hasFollowup(study)) return "";
+  return `<div class="fu">
+    <p class="fq">${esc(study.followup.text || FOLLOWUP_DEFAULT)}</p>
+    <div class="fbtns"><button type="button" class="fbtn" data-r="1">Yes</button><button type="button" class="fbtn" data-r="0">No</button></div>
+    <button type="button" class="next" disabled>Next →</button>
   </div>`;
 }
 
-window.LAB = {BG, esc, fmtPrice, starsHTML, listings, cardHTML, trialHTML, bgColor};
+window.LAB = {BG, esc, fmtPrice, starsHTML, listings, cardHTML, trialHTML, bgColor, hasFollowup, FOLLOWUP_DEFAULT};
 })();

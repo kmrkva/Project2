@@ -117,22 +117,25 @@ function runnerEntry(s){ // what the study page needs (no names, no survey answe
   return {id:s.id, category:s.category||"", question:s.question||"Which would you choose?", bg:s.bg||"white",
     comp:{brand:s.comp.brand, img:`img/${s.id}_comp.jpg`},
     client:{brandA:s.client.brandA, brandB:s.client.brandB||s.client.brandA, imgA:`img/${s.id}_a.jpg`, imgB:`img/${s.id}_b.jpg`},
-    price:s.price||{mode:"none"}, extras:s.extras||{}};
+    price:s.price||{mode:"none"}, extras:s.extras||{},
+    track:!!s.track, followup:(s.followup&&s.followup.on) ? {on:true, text:s.followup.text||LAB.FOLLOWUP_DEFAULT} : {on:false}};
 }
+function studyCols(s){ const k = ["v","c","t"]; if(s.followup&&s.followup.on) k.push("r"); if(s.track) k.push("x"); return k; }
 function previewEntry(r){ const e = runnerEntry(r.study); e.comp.img = r.urls.comp; e.client.imgA = r.urls.a; e.client.imgB = r.urls.b; return e; }
 
 function priceText(p){ if(!p||p.mode==="none") return "none"; if(p.mode==="same") return `same $${p.value}`; return `comp $${p.comp} / A $${p.clientA} / B $${p.clientB}`; }
 function render(){
   $("results").hidden = !STUDIES.length;
   $("count").textContent = `${STUDIES.length} ${STUDIES.length===1?"study":"studies"}`;
-  $("tbl").innerHTML = `<tr><th>ID</th><th>Student</th><th>Competitor vs client</th><th>Question</th><th>Price</th><th>Extras</th><th></th></tr>` +
+  $("tbl").innerHTML = `<tr><th>ID</th><th>Student</th><th>Competitor vs client</th><th>Question</th><th>Price</th><th>Extras</th><th>Columns</th><th></th></tr>` +
     STUDIES.map((r,i)=>{ const s = r.study;
       const brands = `${esc(s.comp.brand)} vs ${esc(s.client.brandA)}${s.client.brandB && s.client.brandB!==s.client.brandA ? ` → ${esc(s.client.brandB)}` : ""}`;
       return `<tr><td class="id">${esc(s.id)}</td><td>${esc(s.name?s.name.first+" "+s.name.last:"")}${r.flags.map(f=>`<span class="flag">${esc(f)}</span>`).join("")}</td>
         <td>${brands}${s.category?`<br><span style="color:var(--muted)">${esc(s.category)}</span>`:""}</td><td>${esc(s.question)}</td><td>${esc(priceText(s.price))}</td>
         <td>${esc(Object.keys(s.extras||{}).join(", ")||"none")}</td>
+        <td>${esc(studyCols(s).map(k=>"_"+k).join(" "))}${s.followup&&s.followup.on?`<br><span style="color:var(--muted)">“${esc(s.followup.text)}”</span>`:""}</td>
         <td><button class="pvbtn" data-i="${i}">Preview</button></td></tr>
-        <tr class="pvrow" id="pv${i}" hidden><td colspan="7"><div class="lab pvbox"><div class="stage"></div>
+        <tr class="pvrow" id="pv${i}" hidden><td colspan="8"><div class="lab pvbox"><div class="stage"></div>
           <div style="margin-top:10px"><button class="pvbtn" data-v="A">Version A</button> <button class="pvbtn" data-v="B">Version B</button></div></div></td></tr>`;
     }).join("");
   $("tbl").querySelectorAll("button[data-i]").forEach(b=>b.onclick=()=>{
@@ -146,13 +149,13 @@ function render(){
 /* ---------- outputs ---------- */
 // lab_ord comes first so it sits right after the demographic questions in the Qualtrics export
 const FIELDS_BASE = ["lab_ord","PROLIFIC_PID","STUDY_ID","SESSION_ID","lab_ver","lab_seed","lab_dev","lab_dur","lab_n"];
-function fieldList(){ return FIELDS_BASE.concat(...STUDIES.map(r=>["v","c","t","x"].map(k=>`${r.study.id}_${k}`))); }
+function fieldList(){ return FIELDS_BASE.concat(...STUDIES.map(r=>studyCols(r.study).map(k=>`${r.study.id}_${k}`))); }
 function csvCell(v){ v = v==null ? "" : String(v); return /[",\n]/.test(v) ? `"${v.replace(/"/g,'""')}"` : v; }
 function submissionsCSV(){
-  const head = ["id","first","last","category","competitor","client_brand_A","client_brand_B","question","bg","price","extras","demographics","demographics_other","why_effect","why_question","who_affected","who_question","source"];
+  const head = ["id","first","last","category","competitor","client_brand_A","client_brand_B","question","bg","price","extras","followup_question","tracks_hovers_clicks","demographics","demographics_other","why_effect","why_question","who_affected","who_question","source"];
   const rows = STUDIES.map(r=>{ const s = r.study, sv = s.survey||{};
     return [s.id, s.name&&s.name.first, s.name&&s.name.last, s.category, s.comp.brand, s.client.brandA, s.client.brandB, s.question, s.bg,
-      priceText(s.price), JSON.stringify(s.extras||{}), (sv.demographics||[]).join("; "), sv.demographicsOther, sv.whyEffect, sv.whyQuestion, sv.whoAffected, sv.whoQuestion||sv.measureQuestion, r.source].map(csvCell).join(","); });
+      priceText(s.price), JSON.stringify(s.extras||{}), (s.followup&&s.followup.on)?s.followup.text:"", s.track?"yes":"no", (sv.demographics||[]).join("; "), sv.demographicsOther, sv.whyEffect, sv.whyQuestion, sv.whoAffected, sv.whoQuestion||sv.measureQuestion, r.source].map(csvCell).join(","); });
   // tally of requested demographics
   const tally = {}; STUDIES.forEach(r=>((r.study.survey||{}).demographics||[]).forEach(d=>tally[d]=(tally[d]||0)+1));
   const tallyRows = ["", "demographic,times_requested"].concat(Object.entries(tally).sort((a,b)=>b[1]-a[1]).map(([d,n])=>`${d},${n}`));
