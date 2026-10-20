@@ -118,7 +118,7 @@ function runnerEntry(s){ // what the study page needs (no names, no survey answe
     comp:{brand:s.comp.brand, img:`img/${s.id}_comp.jpg`},
     client:{brandA:s.client.brandA, brandB:s.client.brandB||s.client.brandA, imgA:`img/${s.id}_a.jpg`, imgB:`img/${s.id}_b.jpg`},
     price:s.price||{mode:"none"}, extras:s.extras||{},
-    track:!!s.track, followup:(s.followup&&s.followup.on) ? {on:true, text:s.followup.text||LAB.FOLLOWUP_DEFAULT} : {on:false}};
+    layout:s.layout||{ratio:1, arrange:"side"}, track:!!s.track, followup:(s.followup&&s.followup.on) ? {on:true, text:s.followup.text||LAB.FOLLOWUP_DEFAULT} : {on:false}};
 }
 function studyCols(s){ const k = ["v","c","t"]; if(s.followup&&s.followup.on) k.push("r"); if(s.track) k.push("x"); return k; }
 function previewEntry(r){ const e = runnerEntry(r.study); e.comp.img = r.urls.comp; e.client.imgA = r.urls.a; e.client.imgB = r.urls.b; return e; }

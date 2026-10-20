@@ -174,11 +174,26 @@ code,.mono{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:13px;ba
 </section>
 
 <section class="step">
-  <h2>6. Image background</h2>
+  <h2>6. Image display</h2>
   <p class="help">The box behind each product image. White suits nearly all retail product photos. Pick black only if your images have dark backgrounds.</p>
   <label class="opt"><input type="radio" name="bg" value="white" checked><span><span class="t">White (recommended)</span></span></label>
   <label class="opt"><input type="radio" name="bg" value="gray"><span><span class="t">Light gray</span></span></label>
   <label class="opt"><input type="radio" name="bg" value="black"><span><span class="t">Black</span></span></label>
+  <label class="f" style="margin-top:18px">Image box shape</label>
+  <p class="help">Both products always get the same box, so they appear the same size. Large or detailed images are fine; they're scaled to fit.</p>
+  <label class="opt"><input type="radio" name="shape" value="auto" checked><span><span class="t">Automatic (recommended)</span><span class="d" id="autoNote">Matches the shape of your images once uploaded.</span></span></label>
+  <div class="checkgrid">
+    <label class="opt"><input type="radio" name="shape" value="square"><span class="t">Square</span></label>
+    <label class="opt"><input type="radio" name="shape" value="tall"><span class="t">Tall (3:4)</span></label>
+    <label class="opt"><input type="radio" name="shape" value="wide"><span class="t">Wide (4:3)</span></label>
+    <label class="opt"><input type="radio" name="shape" value="xwide"><span class="t">Extra wide (2:1)</span></label>
+  </div>
+  <label class="f" style="margin-top:14px">Layout</label>
+  <label class="opt"><input type="radio" name="arrange" value="auto" checked><span><span class="t">Automatic (recommended)</span><span class="d">Side by side, or one above the other when the images are wide.</span></span></label>
+  <div class="checkgrid">
+    <label class="opt"><input type="radio" name="arrange" value="side"><span class="t">Side by side</span></label>
+    <label class="opt"><input type="radio" name="arrange" value="stack"><span class="t">One above the other</span></label>
+  </div>
 </section>
 
 <section class="step">
@@ -299,9 +314,9 @@ function findTrim(im, w, h){
   if(rw*rh > 0.92*w*h) return null;                           // margins too small to matter
   return {x:Math.round(rx), y:Math.round(ry), w:Math.round(rw), h:Math.round(rh)};
 }
-function renderVersion(im, r){ // crop r, max 1000px long side, keeps transparency
+function renderVersion(im, r){ // crop r, max 1600px long side, keeps transparency
   return new Promise(res=>{
-    const sc = Math.min(1, 1000/Math.max(r.w,r.h)), w = Math.max(1,Math.round(r.w*sc)), h = Math.max(1,Math.round(r.h*sc));
+    const sc = Math.min(1, 1600/Math.max(r.w,r.h)), w = Math.max(1,Math.round(r.w*sc)), h = Math.max(1,Math.round(r.h*sc));
     const cv = document.createElement("canvas"); cv.width = w; cv.height = h;
     const cx = cv.getContext("2d"); cx.imageSmoothingQuality = "high"; cx.drawImage(im, r.x, r.y, r.w, r.h, 0, 0, w, h);
     cv.toBlob(b=>res({url:URL.createObjectURL(b), w, h}), "image/png");
@@ -345,6 +360,15 @@ function makeId(){
   return (clean(val("fn")).slice(0,1) + clean(val("ln")).slice(0,2));
 }
 
+/* Box shape: automatic = average shape of the three images participants will see, kept between 0.6 and 2.5. */
+const SHAPES = {square:1, tall:0.75, wide:4/3, xwide:2};
+function autoRatio(){
+  const ks = ["comp","a","b"].filter(k=>IMG[k]); if(!ks.length) return 1;
+  const avg = ks.reduce((t,k)=>{ const v = shown(IMG[k]); return t + v.w/v.h; }, 0) / ks.length;
+  return Math.round(Math.min(2.5, Math.max(0.6, avg))*100)/100;
+}
+function boxRatio(){ const sh = radio("shape"); return SHAPES[sh] || autoRatio(); }
+function shapeName(r){ return r < 0.9 ? "tall" : r <= 1.12 ? "about square" : r < 1.6 ? "wide" : "extra wide"; }
 function readStudy(){
   const pm = radio("pm"), price = pm==="same" ? {mode:"same", value:num("priceSame")}
     : pm==="custom" ? {mode:"custom", comp:num("pComp"), clientA:num("pA"), clientB:$("pBdiff").checked ? num("pB") : num("pA")}
@@ -361,6 +385,7 @@ function readStudy(){
     client: {brandA: val("clientBrand"), brandB: $("brandChange").checked ? val("clientBrandB") : val("clientBrand"),
              imgA: IMG.a && shown(IMG.a).url, imgB: IMG.b && shown(IMG.b).url},
     price, extras,
+    layout: {shape: radio("shape")||"auto", arrange: radio("arrange")||"auto", ratio: boxRatio()},
     track: $("track").checked,
     followup: $("fuOn").checked ? {on:true, text: val("fuText") || LAB.FOLLOWUP_DEFAULT} : {on:false}
   };
@@ -435,6 +460,8 @@ function update(){
   if(lastTrim !== useTrim()){ lastTrim = useTrim(); slots.forEach(([k])=>{ if(IMG[k]) drawUpload(k); }); }
   const s = readStudy(), id = s.id || "id";
   $("sid").textContent = s.id || "–";
+  { const r = autoRatio(), lay = LAB.layoutOf({layout:{ratio:r, arrange:"auto"}});
+    $("autoNote").textContent = ["comp","a","b"].some(k=>IMG[k]) ? `Your images: ${shapeName(r)} (${r}:1), shown ${lay.stack?"one above the other":"side by side"}.` : "Matches the shape of your images once uploaded."; }
   ["v","c","t","x","r","x2","r2"].forEach(k=>$("c_"+k).textContent = `${id}_${k.slice(0,1)}`);
   $("zipname").textContent = `${id}_abtest.zip`;
   $("testlink").textContent = `kmrkva.github.io/Project2/lab/?only=${id}`;
@@ -481,7 +508,7 @@ $("dl").onclick = async ()=>{
       category:s.category, question:s.question, bg:s.bg,
       comp:{brand:s.comp.brand, img:"comp.jpg"},
       client:{brandA:s.client.brandA, brandB:s.client.brandB, imgA:"a.jpg", imgB:"b.jpg"},
-      price:s.price, extras:s.extras, track:s.track, followup:s.followup,
+      price:s.price, extras:s.extras, layout:s.layout, track:s.track, followup:s.followup,
       survey:{ demographics:[...document.querySelectorAll("input[name=demo]:checked")].map(x=>x.value),
                demographicsOther:val("demoOther"), whyEffect:val("whyEffect"), whyQuestion:val("whyQ"), whoAffected:val("modWhy"), whoQuestion:val("modQ") },
       imageInfo:Object.fromEntries(slots.map(([k])=>[k,{file:IMG[k].name, w:IMG[k].w, h:IMG[k].h, trimmed:!!(useTrim() && IMG[k].trimmed)}]))

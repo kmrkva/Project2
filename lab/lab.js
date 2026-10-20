@@ -36,12 +36,12 @@ function placeholder(label){
   return `<div class="ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 17l-5-5-9 8"/></svg><span>${esc(label)}</span></div>`;
 }
 
-function cardHTML(L, side, bg, btnLabel){
+function cardHTML(L, side, bg, btnLabel, ratio){
   const has = v => v!=null && v!=="";
   const rating = (has(L.stars) || has(L.reviews))
     ? `<div class="rating">${has(L.stars)?`${Number(L.stars).toFixed(1)} ${starsHTML(L.stars)}`:""}${has(L.reviews)?` <span class="rcount">(${Number(L.reviews).toLocaleString()})</span>`:""}</div>` : "";
   return `<div class="card" data-who="${L.who}" data-side="${side}">
-    <div class="imgwrap" style="background:${esc(bg)}">${has(L.badge)?`<div class="badge">${esc(L.badge)}</div>`:""}${
+    <div class="imgwrap" style="background:${esc(bg)};aspect-ratio:${Number(ratio)||1}">${has(L.badge)?`<div class="badge">${esc(L.badge)}</div>`:""}${
       L.img ? `<img src="${esc(L.img)}" alt="" draggable="false">` : placeholder(L.who==="comp"?"Competitor image":"Your product image")}</div>
     <div class="info">
       <div class="brand">${esc(L.brand || (L.who==="comp"?"Competitor brand":"Your client's brand"))}</div>
@@ -56,14 +56,21 @@ function cardHTML(L, side, bg, btnLabel){
 }
 
 /* One full choice screen. clientLeft = true puts the client's product on the left. */
+/* Box shape (width/height) shared by both products, and whether to stack them one above the other. */
+function layoutOf(study){
+  const L = study.layout || {}, ratio = Math.min(3, Math.max(0.5, Number(L.ratio) || 1));
+  const stack = L.arrange==="stack" || (L.arrange!=="side" && ratio >= 1.35);
+  return {ratio, stack};
+}
 function trialHTML(study, version, clientLeft){
+  const lay = layoutOf(study);
   const {client, comp} = listings(study, version), bg = bgColor(study);
   const cat = (study.category||"").trim();
   const left = clientLeft ? client : comp, right = clientLeft ? comp : client;
-  return `<div class="trial">
+  return `<div class="trial${lay.stack?" wide":""}">
     ${cat?`<div class="searchline">Results for "${esc(cat.toLowerCase())}"</div><h1 class="cat-title">${esc(cat)}</h1>`:""}
     <div class="qbanner"><span class="qt">${esc(study.question || "Which would you choose?")}</span></div>
-    <div class="grid">${cardHTML(left,"L",bg)}${cardHTML(right,"R",bg)}</div>
+    <div class="grid${lay.stack?" stack":""}">${cardHTML(left,"L",bg,null,lay.ratio)}${cardHTML(right,"R",bg,null,lay.ratio)}</div>
     ${followupHTML(study)}
   </div>`;
 }
@@ -79,5 +86,5 @@ function followupHTML(study){
   </div>`;
 }
 
-window.LAB = {BG, esc, fmtPrice, starsHTML, listings, cardHTML, trialHTML, bgColor, hasFollowup, FOLLOWUP_DEFAULT};
+window.LAB = {layoutOf, BG, esc, fmtPrice, starsHTML, listings, cardHTML, trialHTML, bgColor, hasFollowup, FOLLOWUP_DEFAULT};
 })();

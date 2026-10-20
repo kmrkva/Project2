@@ -21,6 +21,13 @@
 .lab .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
 .lab .card{background:var(--panel);border:1px solid var(--line);border-radius:18px;display:flex;flex-direction:column;position:relative;transition:border-color .15s}
 .lab .card.chosen{border-color:var(--green)}
+/* stacked layout for wide images: products one above the other, details to the right */
+.lab .trial.wide{max-width:860px}
+.lab .grid.stack{grid-template-columns:minmax(0,1fr);gap:16px}
+.lab .grid.stack .card{flex-direction:row}
+.lab .grid.stack .imgwrap{flex:1 1 auto;min-width:0;border-radius:17px 0 0 17px}
+.lab .grid.stack .info{flex:0 0 210px}
+.lab .grid.stack .imgwrap img{padding:2.5%}
 .lab .imgwrap{position:relative;aspect-ratio:1/1;border-radius:17px 17px 0 0;overflow:hidden;display:flex;align-items:center;justify-content:center}
 .lab .imgwrap img{width:100%;height:100%;object-fit:contain;padding:6%;display:block;-webkit-user-drag:none;user-select:none}
 .lab .ph{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#64748b;font-family:var(--mono);font-size:12px;text-align:center;padding:12px}
@@ -53,6 +60,9 @@
 .lab .next:disabled{opacity:.3;cursor:not-allowed}
 
 @container (max-width:560px){
+  .lab .grid.stack .card{flex-direction:column}
+  .lab .grid.stack .imgwrap{border-radius:17px 17px 0 0;flex:none;width:100%}
+  .lab .grid.stack .info{flex:none}
   .lab .fq{font-size:16px}
   .lab .fbtn{padding:10px 6px;font-size:14px}
   .lab .cat-title{font-size:22px}
