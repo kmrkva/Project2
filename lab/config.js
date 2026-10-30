@@ -2,6 +2,6 @@
    Change `version` whenever you change the study list mid-collection (it resets saved progress). */
 window.LAB_CONFIG = {
   title: "Consumer Behavior Test Lab",
-  QUALTRICS_URL: "https://YOUR_UNIVERSITY.qualtrics.com/jfe/form/SV_XXXXXXXXXXXXXXX",
+  QUALTRICS_URL: "https://baylor.qualtrics.com/jfe/form/SV_eIMDNUKJuBRQk9o",
   version: "2026f-1"
 };
