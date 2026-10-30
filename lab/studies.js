@@ -204,7 +204,15 @@ window.STUDIES = [
     "price": {
       "mode": "none"
     },
-    "extras": {}
+    "extras": {},
+    "layout": {
+      "ratio": 2,
+      "arrange": "stack"
+    },
+    "track": true,
+    "followup": {
+      "on": false
+    }
   },
   {
     "id": "asa",
