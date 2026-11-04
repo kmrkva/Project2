@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="lab.css">
+<link rel="stylesheet" href="lab.css?v=3">
 <style>
 html,body{margin:0;background:#0a0a0a;-webkit-text-size-adjust:100%}
 body{min-height:100vh}
@@ -39,19 +39,20 @@ table.res th{color:var(--muted);font-weight:600}
   <main id="app" class="stage"></main>
   <div class="footnote">Research study. Nothing will actually be purchased.</div>
 </div>
-<script src="config.js"></script>
-<script src="studies.js"></script>
-<script src="lab.js"></script>
+<script src="config.js?v=3"></script>
+<script src="studies.js?v=3"></script>
+<script src="lab.js?v=3"></script>
 <script>
 (function(){
 "use strict";
 const C = window.LAB_CONFIG || {}, ALL = window.STUDIES || [], esc = LAB.esc;
 const qs = new URLSearchParams(location.search);
 const ONLY = (qs.get("only")||"").trim().toLowerCase();
+const STUDY = (qs.get("study")||"").trim().toLowerCase().split(",").map(s=>s.trim()).filter(Boolean); // live, single or few studies: ?study=chu
 const FORCE_V = (qs.get("v")||"").toUpperCase();
 const DEBUG = qs.get("debug")==="1";
-const RESERVED = ["only","v","debug","seed","reset"];
-const KEY = "cbtl_" + (C.version||"1") + (ONLY ? "_only_"+ONLY : "");
+const RESERVED = ["only","study","v","debug","seed","reset"];
+const KEY = "cbtl_" + (C.version||"1") + (ONLY ? "_only_"+ONLY : "") + (STUDY.length ? "_study_"+STUDY.join("-") : "");
 const app = document.getElementById("app");
 document.getElementById("logo").innerHTML = '<span class="dot">● </span>' + esc(C.title || "Consumer Behavior Test Lab");
 document.title = C.title || document.title;
@@ -66,7 +67,8 @@ function balanced(n, x, y, rng){ // half x, half y (odd n: extra goes to a rando
   return shuffle(arr, rng);
 }
 
-const studies = ONLY ? ALL.filter(s=>s.id===ONLY) : ALL;
+const studies = ONLY ? ALL.filter(s=>s.id===ONLY)
+  : STUDY.length ? ALL.filter(s=>STUDY.includes(String(s.id).toLowerCase())) : ALL;
 const isTouch = matchMedia("(pointer:coarse)").matches;
 
 function fresh(){
@@ -108,8 +110,9 @@ function render(){
 }
 
 function renderEmpty(){
-  app.innerHTML = `<div class="screen"><h1>${ONLY?"Study not found":"No studies yet"}</h1>
-    <p>${ONLY?`There's no study with the ID <b>${esc(ONLY)}</b> on the site yet. If you just submitted it, it appears once your instructor adds it.`:"The study list is empty."}</p></div>`;
+  const missing = ONLY ? ONLY : STUDY.join(", ");
+  app.innerHTML = `<div class="screen"><h1>${ONLY||STUDY.length?"Study not found":"No studies yet"}</h1>
+    <p>${ONLY||STUDY.length?`There's no study with the ID <b>${esc(missing)}</b> on the site yet. If you just submitted it, it appears once your instructor adds it.`:"The study list is empty."}</p></div>`;
 }
 
 function renderWelcome(){
