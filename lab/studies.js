@@ -86,12 +86,12 @@ window.STUDIES = [
     "question": "Which would you choose?",
     "bg": "white",
     "comp": {
-      "brand": "JBL",
+      "brand": "Bose",
       "img": "img/ale_comp.jpg"
     },
     "client": {
-      "brandA": "Bose",
-      "brandB": "Bose",
+      "brandA": "JBL",
+      "brandB": "JBL",
       "imgA": "img/ale_a.jpg",
       "imgB": "img/ale_b.jpg"
     },
