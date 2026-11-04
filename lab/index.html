@@ -120,9 +120,9 @@ function renderWelcome(){
   app.innerHTML = `<div class="screen">
     ${ONLY?`<div class="note test"><b>Test mode:</b> showing only study <b>${esc(ONLY)}</b>, Version ${esc(S.ver[ONLY])}${FORCE_V?" (forced)":" (random)"}. Your answers here are not saved anywhere.</div>`:""}
     <h1>Welcome</h1>
-    <p>You'll see ${n===1?"a pair":`${n} pairs`} of products, like you might see when shopping online.</p>
-    <p>For each pair, click <b>Add to Cart</b> on the one you would choose. Nothing will actually be purchased. Go with your first instinct; each one takes just a few seconds.</p>
-    ${n>1?`<p>This part takes about ${mins} minute${mins>1?"s":""}. Please don't use your browser's back button.</p>`:""}
+    <p>You'll see 65-70 pairs of products and make a choice about which you would prefer from each pair.</p>
+    <p>For each pair, click <b>Add to Cart</b> on the one you would choose. Nothing will actually be purchased. You can make a quick choice about which you wouls prefer; each one typically takes about 4-5 seconds, though some people may choose to take longer on each choice.</p>
+    ${n>1?`<p>Assuming you take about 4-5 seconds per choice, this study should take about 5-6 minutes total.  Please don't use your browser's back button.</p>`:""}
     <button class="btn" id="go">Start</button>
   </div>`;
   document.getElementById("go").onclick = ()=>{ S.t0 = Date.now(); next(); };
